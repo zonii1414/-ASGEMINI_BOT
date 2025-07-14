@@ -1,50 +1,34 @@
+import logging import requests import json from flask import Flask from telegram import Update from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-import logging
-import requests
-import threading
-from flask import Flask
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+Tokens
 
-# Tokens
-TELEGRAM_TOKEN = "7865225217:AAFPf90LvkS26SielmfFPb2VhdYFapNNl24"
-GEMINI_API_KEY = "AIzaSyCxyrh9fR81wvoI0u476R-y0VX0zZuS-TM"
+TELEGRAM_TOKEN = "7865225217:AAFPf90LvkS26SielmfFPb2VhdYFapNNl24" GEMINI_API_KEY = "AIzaSyCxyrh9fR81wvoI0u476R-y0VX0zZuS-TM"
 
-# Flask app for keep-alive
+Flask for keep alive
+
 app = Flask('')
 
-@app.route('/')
-def home():
-    return "Gemini Telegram Bot is running!"
+@app.route('/') def home(): return "ASGEMINI_BOT is running!"
 
-def run_web():
-    app.run(host='0.0.0.0', port=8080)
+Gemini call
 
-threading.Thread(target=run_web).start()
+def ask_gemini(prompt): url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + GEMINI_API_KEY headers = {"Content-Type": "application/json"} data = { "contents": [{"parts": [{"text": prompt}]}] } response = requests.post(url, headers=headers, data=json.dumps(data)) try: return response.json()["candidates"][0]["content"]["parts"][0]["text"] except: return "Gemini API error or limit reached."
 
-# Gemini API
-def ask_gemini(prompt):
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
-    headers = {"Content-Type": "application/json"}
-    payload = { "contents": [{"parts": [{"text": prompt}]}] }
-    response = requests.post(f"{url}?key={GEMINI_API_KEY}", headers=headers, json=payload)
-    try:
-        return response.json()['candidates'][0]['content']['parts'][0]['text']
-    except:
-        return "⚠️ Gemini API error or limit reached."
+Telegram handler
 
-# Telegram Handlers
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🤖 Welcome to Gemini AI Bot! Ask me anything.")
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE): user_text = update.message.text reply = ask_gemini(user_text) await update.message.reply_text(reply)
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_message = update.message.text
-    await update.message.chat.send_action(action="typing")
-    reply = ask_gemini(user_message)
-    await update.message.reply_text(reply)
+Start command
 
-app_bot = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
-app_bot.add_handler(CommandHandler("start", start))
-app_bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE): await update.message.reply_text("🤖 Welcome to ASGEMINI_BOT!\nSend me any question, quiz, or screenshot text and I’ll reply using Google Gemini AI.")
 
-app_bot.run_polling()
+Start bot app
+
+if name == 'main': import threading def run_flask(): app.run(host='0.0.0.0', port=8080) threading.Thread(target=run_flask).start()
+
+application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+application.add_handler(CommandHandler("start", start))
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+application.run_polling()
+
