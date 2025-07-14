@@ -7,7 +7,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Con
 
 # Tokens
 TELEGRAM_TOKEN = "7865225217:AAFPf90LvkS26SielmfFPb2VhdYFapNNl24"
-GEMINI_API_KEY = "AIzaSyCxyrh9fR81wvoI0u476R-y0VX0zZuS-TM"
+GEMINI_API_KEY = AIzaSyANNnLYicRZkbDCWrRc8EtkgvVBHPjDHaY
 
 # Flask for keep alive
 app = Flask('')
