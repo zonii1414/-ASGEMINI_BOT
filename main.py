@@ -4,7 +4,7 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 
 # 🔐 API keys
-DEEPSEEK_API_KEY = "sk-c2abdcaabd594f80bd90d37863c22472"
+GEMINI_API_KEY =AIzaSyCXipRu__uzI1p2zrpSsL352oG4Z2k58kQ
 TELEGRAM_BOT_TOKEN = "8042316891:AAF42eRD-GZjyKQBDkheVHUm9wWx17yf0z4"
 
 # Logging setup
