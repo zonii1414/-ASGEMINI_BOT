@@ -1,56 +1,47 @@
-import os
-import json
 import logging
 import requests
-from flask import Flask
 from telegram import Update
-from telegram.ext import (
-    ApplicationBuilder, CommandHandler, MessageHandler,
-    ContextTypes, filters
-)
+from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 
-# ==== CONFIG ====
-TELEGRAM_TOKEN = "7865225217:AAFTDl0uGBt7M3wziTFiX4FAvFEqekI0Wpw"
-GEMINI_API_KEY = "AIzaSyANNnLYicRZkbDCWrRc8EtkgvVBHPjDHaY"
+# 🛡️ API keys – Replace these with your real ones
+DEEPSEEK_API_KEY = "sk-e1de6bd399b04632a41b592489c422a8"
+TELEGRAM_BOT_TOKEN = "7865225217:AAFPf90LvkS26SielmfFPb2VhdYFapNNl24"
 
-# ==== FLASK SETUP ====
-app = Flask(__name__)
+# Logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-@app.route('/')
-def home():
-    return "✅ ADNAN AI is running!"
+# DeepSeek API call
+def call_deepseek(prompt):
+    url = "https://api.deepseek.com/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": "deepseek-chat",
+        "messages": [{"role": "user", "content": prompt}]
+    }
+    response = requests.post(url, json=data, headers=headers)
+    if response.status_code == 200:
+        return response.json()['choices'][0]['message']['content']
+    else:
+        raise Exception("DeepSeek API error")
 
-# ==== GEMINI FUNCTION ====
-def ask_gemini(prompt):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
-    headers = {"Content-Type": "application/json"}
-    data = {"contents": [{"parts": [{"text": prompt}]}]}
-    response = requests.post(url, headers=headers, data=json.dumps(data))
-
-    try:
-        return response.json()["candidates"][0]["content"]["parts"][0]["text"]
-    except:
-        return "⚠️ Gemini API error or limit reached."
-
-# ==== TELEGRAM HANDLERS ====
+# Telegram bot commands
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🤖 Welcome to *ADNAN AI Bot*!\nAsk anything in English or Urdu.\n\n🌍 Powered by Google Gemini", parse_mode="Markdown")
+    await update.message.reply_text("👋 Welcome to DeepSeek AI Bot!\nType your message and get AI response.")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_input = update.message.text
-    reply = ask_gemini(user_input)
+    user_message = update.message.text
+    try:
+        reply = call_deepseek(user_message)
+    except Exception as e:
+        reply = "⚠️ DeepSeek API error. Try again later."
     await update.message.reply_text(reply)
 
-# ==== RUN BOT ====
+# Start the bot
 if __name__ == '__main__':
-    import threading
-
-    def run_flask():
-        app.run(host='0.0.0.0', port=8080)
-
-    threading.Thread(target=run_flask).start()
-
-    application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    application.run_polling()
+    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.run_polling()
